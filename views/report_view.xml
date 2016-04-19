@@ -1,0 +1,36 @@
+<openerp>
+	<data>	
+		<record model="ir.ui.view" id="view_report_rotation">
+			<field name="name">wizard.reporte.rotacion</field>
+			<field name="model">report.rotation</field>
+			<field name="type">form</field>
+			<field name="arch" type="xml">
+			<form string="Reporte rotacion productos">                        
+          			<group colspan="2">
+          				<field name="csv_file" readonly="True" filename="export_filename"/> 
+            		</group>		
+          			<group colspan="2">
+          				<button name="create_csv_report_rotation"  type="object" string="crear" class='oe_highlight'/> 
+            		</group>		            				
+          			<group colspan="4">
+          				<field name="product_category_ids" required="True"/> 
+            		</group>		            				
+
+            		
+				</form>
+			</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="action_report_rotation_wz">
+			<field name="name">Reporte rotacion productos</field>
+			<field name="res_model">report.rotation</field>
+			<field name="view_type">form</field>
+			<field name="view_mode">form</field>
+			<field name="target">new</field>
+		</record>
+	
+	<menuitem name="Reporte rotacion productos" parent="stock.menu_stock_product" 
+	id="menu_report_rotation_wz" action="action_report_rotation_wz" sequence="100"/>
+
+	</data>
+</openerp>
