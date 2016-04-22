@@ -13,10 +13,11 @@
           				<button name="create_csv_report_rotation"  type="object" string="crear" class='oe_highlight'/> 
             		</group>		            				
           			<group colspan="4">
-          				<field name="product_category_ids" required="True"/> 
+          				<field name="product_category_ids" /> 
             		</group>		            				
-
-            		
+          			<group colspan="4">
+          				<field name="product_partner_ids" /> 
+            		</group>		            				            		
 				</form>
 			</field>
 		</record>

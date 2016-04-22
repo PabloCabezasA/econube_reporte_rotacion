@@ -15,6 +15,7 @@ class report_rotation(osv.osv_memory):
         'csv_file' : fields.binary('Csv Report File', readonly=False),
         'export_filename': fields.char('Export CSV Filename', size=128),
         'product_category_ids': fields.many2many('product.category','rotation_prod_categ_rel', 'rotation_id','category_id', 'Categorias'),
+        'product_partner_ids': fields.many2many('res.partner','partner_rotation_rel', 'rotation_id','partner_id', 'Proveedores'),
         }
 
     def create_csv_report_rotation(self, cr, uid, ids, context=None):
@@ -31,26 +32,44 @@ class report_rotation(osv.osv_memory):
             'target': 'new',
             'res_id': ids[0]  or False,##please replace record_id and provide the id of the record to be opened 
         }
-        
-        
+
+    def ajustar_filtro(self, cat, prod):
+        filter = ''
+        if cat:
+            filter += 'and pc.id in (%s) ' % ','.join(str(x) for x in cat) 
+        if prod:
+            filter += 'and pp.id in (%s)' % ','.join(str(x) for x in prod)        
+        return filter
+
+    def buscar_productos_por_partner(self, cr, uid, partners):
+        if not partners:
+            return []
+        sql = """select product_id from product_supplierinfo 
+                where name in (%s)
+        """ % ''.join(str(x) for x in partners)
+        cr.execute(sql)
+        ids = cr.fetchall()
+        if ids: 
+            ids = map(lambda x:x[0], ids)
+            return ids
+        return ids
+    
     def buscar_productos(self, cr, uid, ids, context=None):
         list_prod = []
         this = self.browse(cr, uid, ids[-1], context)
-        
-        print this.product_category_ids
         list_prod = map(lambda x:x.id, this.product_category_ids)
-        if len(list_prod) <=1:
-            list_prod = '= %d' % list_prod[0]
-        else:
-            list_prod = 'in %s' % str(tuple(list_prod))
+        list_prov = map(lambda x:x.id, this.product_partner_ids)        
+        list_prov = self.buscar_productos_por_partner(cr, uid, list_prov)
+        filter = self.ajustar_filtro(list_prod, list_prov)
         sql = """
                 select pp.id, pc.name, pp.default_code, pt.name ,(select name from res_partner where id = (select name from product_supplierinfo where product_id = pp.id limit 1)
                 ) ,pp.min_qty , pp.max_qty
                 from product_product pp 
                 join product_template pt on (pp.id = pt.id)
                 left join product_category pc on (pt.categ_id = pc.id)
-                where pp.active = True and pc.id %s
-              """ % list_prod
+                where pp.active = True 
+                %s
+              """ % filter
         cr.execute(sql)
         data = cr.fetchall()
         path = '/tmp/Reportes_emaresa.xlsx'
