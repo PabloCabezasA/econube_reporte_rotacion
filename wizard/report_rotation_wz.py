@@ -33,12 +33,12 @@ class report_rotation(osv.osv_memory):
             'res_id': ids[0]  or False,##please replace record_id and provide the id of the record to be opened 
         }
 
-    def ajustar_filtro(self, cat, prod):
+    def ajustar_filtro(self, cat, prov, prod_prov):
         filter = ''
         if cat:
             filter += 'and pc.id in (%s) ' % ','.join(str(x) for x in cat) 
-        if prod:
-            filter += 'and pp.id in (%s)' % ','.join(str(x) for x in prod)        
+        if prov:
+            filter += 'and pp.id in (%s)' % ','.join(str(x) for x in prod_prov)        
         return filter
 
     def buscar_productos_por_partner(self, cr, uid, partners):
@@ -56,11 +56,15 @@ class report_rotation(osv.osv_memory):
     
     def buscar_productos(self, cr, uid, ids, context=None):
         list_prod = []
+        prod_prov = []
         this = self.browse(cr, uid, ids[-1], context)
         list_prod = map(lambda x:x.id, this.product_category_ids)
         list_prov = map(lambda x:x.id, this.product_partner_ids)        
-        list_prov = self.buscar_productos_por_partner(cr, uid, list_prov)
-        filter = self.ajustar_filtro(list_prod, list_prov)
+        if list_prov:
+            prod_prov = self.buscar_productos_por_partner(cr, uid, list_prov)
+            if not prod_prov:
+                prod_prov.append(-1)
+        filter = self.ajustar_filtro(list_prod, list_prov, prod_prov)
         sql = """
                 select pp.id, pc.name, pp.default_code, pt.name ,(select name from res_partner where id = (select name from product_supplierinfo where product_id = pp.id limit 1)
                 ) ,pp.min_qty , pp.max_qty
